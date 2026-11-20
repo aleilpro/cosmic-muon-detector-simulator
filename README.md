@@ -29,3 +29,20 @@ An interactive graphical application built in **C++** and **CERN ROOT (`TGMainFr
 
 ### Requirements
 * **CERN ROOT 6.x** compiled with GUI and 3D graphics support (`libGui`, `libGpad`, `libGraf3d`).
+
+Launch either simulator directly via the ROOT Cling interpreter (ensure materials.txt and particles.txt are in the working directory):
+
+Bash
+Single-detector 3D acceptance & Bethe-Bloch simulator
+root -l lab.cpp
+
+3-fold coincidence telescope simulator
+root -l lab2.cpp
+
+## Generated Outputs
+bethe_mc_results.root — Output ROOT file storing all generated TGraph, TGraphErrors, TH1D, and TCanvas objects organized into subdirectories (BetheBloch, Spettro_Rastin_PMT, MonteCarlo_3D).
+
+mc_results.txt / mc_results_telescopio.txt — Detailed text reports summarizing topological event counts, acceptances, expected rates, and convergence scan tables.
+
+## Author
+Alessio Proietti — M.Sc. Student in Experimental Particle Physics, Università degli Studi Roma Tre
