@@ -37,7 +37,6 @@ An interactive graphical application built in **C++** and **CERN ROOT** (`TGMain
 
 The generation-plane scan (feature 3) checks that the Monte Carlo geometric factor converges to the analytical value as the generator plane grows.
 
-> **TODO:** add one reference case with the numbers, e.g. a table or plot of $`G_{\text{MC}}(S)`$ vs. $`G_{\text{Ana}}`$ for a specific detector geometry (`mc_results.txt` already contains the convergence scan table).
 
 ## Repository structure
 
@@ -51,9 +50,7 @@ The generation-plane scan (feature 3) checks that the Monte Carlo geometric fact
 
 ## Requirements
 
-- **CERN ROOT 6.x**, built with GUI and 3D graphics support (`libGui`, `libGpad`, `libGraf3d`).
-
-> **TODO:** state the exact ROOT version(s) you tested with, e.g. "Tested with ROOT 6.xx/xx on Linux/macOS".
+- **CERN ROOT 6.36**, built with GUI and 3D graphics support (`libGui`, `libGpad`, `libGraf3d`).
 
 ## Usage
 
@@ -82,7 +79,6 @@ root -l lab2.cpp
 - Barkas–Berger shell corrections for the stopping power.
 - Cauchy–Crofton formula for the mean chord length of convex bodies.
 
-> **TODO:** replace each entry with the full reference (authors, journal, year, DOI) of the paper or book you used.
 
 ## Author
 
