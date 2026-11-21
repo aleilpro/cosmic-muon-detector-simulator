@@ -179,7 +179,7 @@ struct MuonMCResult {
     double rateAnaTopSideHz = 0.0;
     double rateAnaSideBotHz = 0.0;
     double rateAnaSideSideHz = 0.0;
-    
+
     // Geometria Telescopio usata nel Run
     double zGen = 0.0;
     double x1=0, y1=0, z1_min=0, z1_max=0;
@@ -711,7 +711,9 @@ private:
     TGNumberEntry *fSeed = nullptr;
     TGNumberEntry *fI0 = nullptr;
     TGNumberEntry *fExponent = nullptr;
-    TGNumberEntry *fEfficiency = nullptr;
+    TGNumberEntry *fEfficiency1 = nullptr;
+    TGNumberEntry *fEfficiency2 = nullptr;
+    TGNumberEntry *fEfficiency3 = nullptr;
     TGLabel *fRes[16] = {nullptr};
 
     // ---------------------------------------------------------------------
@@ -967,7 +969,7 @@ UnifiedDetectorGUI::UnifiedDetectorGUI(const TGWindow *p, UInt_t w, UInt_t h) {
     }
 
     // ---------------------------------------------------------------------
-    // SCHEDA SINISTRA 2: MONTE CARLO GEOMETRICO 
+    // SCHEDA SINISTRA 2: MONTE CARLO GEOMETRICO
     // ---------------------------------------------------------------------
     TGCompositeFrame *tabLeftMC = fLeftTabs->AddTab("MC Coincidenza");
     TGVerticalFrame *leftMCFrame = new TGVerticalFrame(tabLeftMC, 405, 760);
@@ -1005,11 +1007,13 @@ UnifiedDetectorGUI::UnifiedDetectorGUI(const TGWindow *p, UInt_t w, UInt_t h) {
     autoBtn->Connect("Clicked()", "UnifiedDetectorGUI", this, "AutoScaleIdealPlane()");
     mcFrame->AddFrame(autoBtn, new TGLayoutHints(kLHintsExpandX, 2, 2, 2, 2));
 
-    TGGroupFrame *fluxFrame = new TGGroupFrame(leftMCFrame, "3. Parametri Flusso Cosmico al Livello del Mare", kVerticalFrame);
+    TGGroupFrame *fluxFrame = new TGGroupFrame(leftMCFrame, "3. Parametri Flusso Cosmico & Efficienze", kVerticalFrame);
     leftMCFrame->AddFrame(fluxFrame, new TGLayoutHints(kLHintsExpandX, 4, 4, 2, 2));
-    fI0         = addNumberRow(fluxFrame, "I_0 verticale [muoni/(cm^2 s sr)]:", 9.13e-3, 1.0e-7, 10.0, TGNumberFormat::kNESReal);
-    fExponent   = addNumberRow(fluxFrame, "Esponente angolare n (cos^n):", 2.0, 0.0, 10.0, TGNumberFormat::kNESRealTwo);
-    fEfficiency = addNumberRow(fluxFrame, "Efficienza S1 (Top) [%] (S2,S3=100%):", 100.0, 0.0, 100.0, TGNumberFormat::kNESRealTwo);
+    fI0          = addNumberRow(fluxFrame, "I_0 verticale [muoni/(cm^2 s sr)]:", 9.13e-3, 1.0e-7, 10.0, TGNumberFormat::kNESReal);
+    fExponent    = addNumberRow(fluxFrame, "Esponente angolare n (cos^n):", 2.0, 0.0, 10.0, TGNumberFormat::kNESRealTwo);
+    fEfficiency1 = addNumberRow(fluxFrame, "Efficienza S1 (Top) [%]:", 100.0, 0.0, 100.0, TGNumberFormat::kNESRealTwo);
+    fEfficiency2 = addNumberRow(fluxFrame, "Efficienza S2 (Mid) [%]:", 100.0, 0.0, 100.0, TGNumberFormat::kNESRealTwo);
+    fEfficiency3 = addNumberRow(fluxFrame, "Efficienza S3 (Bot) [%]:", 100.0, 0.0, 100.0, TGNumberFormat::kNESRealTwo);
 
     TGHorizontalFrame *mcBtnRow = new TGHorizontalFrame(leftMCFrame);
     leftMCFrame->AddFrame(mcBtnRow, new TGLayoutHints(kLHintsExpandX, 4, 4, 3, 3));
@@ -1025,7 +1029,7 @@ UnifiedDetectorGUI::UnifiedDetectorGUI(const TGWindow *p, UInt_t w, UInt_t h) {
 
     TGGroupFrame *resFrame = new TGGroupFrame(leftMCFrame, "Risultati Accettanza, Fattore Geometrico e Rate", kVerticalFrame);
     leftMCFrame->AddFrame(resFrame, new TGLayoutHints(kLHintsExpandX, 4, 4, 2, 2));
-    
+
     const char *labels[16] = {
         "Piano ideale S [cm^2] (v_piano): ",
         "Accettanza TOTALE A_tot [%]: ",
@@ -1353,7 +1357,7 @@ void UnifiedDetectorGUI::SyncPMTToMC() {
     fX->SetNumber(fDetLx->GetNumber());
     fY->SetNumber(fDetLy->GetNumber());
     fZ->SetNumber(fDetLz->GetNumber());
-    fEfficiency->SetNumber(fLastPMTEfficiencyPct);
+    fEfficiency1->SetNumber(fLastPMTEfficiencyPct);
     fLeftTabs->SetTab(1);
     DoCalculateMC();
 }
@@ -2129,10 +2133,10 @@ bool UnifiedDetectorGUI::RunMCSimulation(MuonMCResult &out, std::string &error) 
     const UInt_t seed = static_cast<UInt_t>(fSeed->GetNumber());
     const double i0 = fI0->GetNumber();
     const double n = fExponent->GetNumber();
-    const double eff1 = fEfficiency->GetNumber() / 100.0; // Efficienza impostata da GUI per il TOP (S1)
-    const double eff2 = 1.0;                              // 100% fissa per il MID (S2)
-    const double eff3 = 1.0;                              // 100% fissa per il BOT (S3)
-    const double eff = eff1 * eff2 * eff3;                // Efficienza totale in coincidenza
+    const double eff1 = fEfficiency1->GetNumber() / 100.0; // Efficienza S1 (Top)
+    const double eff2 = fEfficiency2->GetNumber() / 100.0; // Efficienza S2 (Mid)
+    const double eff3 = fEfficiency3->GetNumber() / 100.0; // Efficienza S3 (Bot)
+    const double eff = eff1 * eff2 * eff3;                 // Efficienza totale in coincidenza 3-fold
 
     if (x <= 0.0 || y <= 0.0 || z <= 0.0 || lx < x || ly < y || nGen < 100) {
         error = "Parametri geometrici non validi (assicurarsi che Lx >= X, Ly >= Y e N_gen >= 100).";
@@ -2156,13 +2160,13 @@ bool UnifiedDetectorGUI::RunMCSimulation(MuonMCResult &out, std::string &error) 
     const double omegaEffSide = std::sqrt(kPi) * std::tgamma(0.5 * (n + 1.0)) /
                                 (2.0 * std::tgamma(0.5 * (n + 4.0)));
     // La formula analitica vale *solo* per il blocco superiore, la teniamo a scopo di riferimento (non descrive il telescopio intero)
-    out.geomAna = out.areaTop * omegaEffTop + out.areaSidesTot * omegaEffSide; 
-    
-    out.rateAnaTopHz      = eff * i0 * out.areaTop * omegaEffTop;
-    out.rateAnaSideXHz    = eff * i0 * out.areaSideX * omegaEffSide;
-    out.rateAnaSideYHz    = eff * i0 * out.areaSideY * omegaEffSide;
+    out.geomAna = out.areaTop * omegaEffTop + out.areaSidesTot * omegaEffSide;
+
+    out.rateAnaTopHz      = eff1 * i0 * out.areaTop * omegaEffTop;
+    out.rateAnaSideXHz    = eff1 * i0 * out.areaSideX * omegaEffSide;
+    out.rateAnaSideYHz    = eff1 * i0 * out.areaSideY * omegaEffSide;
     out.rateAnaSidesTotHz = 2.0 * (out.rateAnaSideXHz + out.rateAnaSideYHz);
-    out.rateAnaTotal3DHz  = eff * i0 * out.geomAna;
+    out.rateAnaTotal3DHz  = eff1 * i0 * out.geomAna;
 
     // ---------------- GEOMETRIA TELESCOPIO A 3 STRATI ----------------
     const double gap1 = 26.7; // Vuoto sotto il primo blocco
@@ -2274,7 +2278,7 @@ bool UnifiedDetectorGUI::RunMCSimulation(MuonMCResult &out, std::string &error) 
         out.rateMCErr[c] = out.rateIdealHz * out.accErr[c];
     }
 
-    out.countRealTot   = out.counts[0]; 
+    out.countRealTot   = out.counts[0];
     out.accRealTot    = static_cast<double>(out.countRealTot) / nGenD;
     out.accRealTotErr = std::sqrt(std::max(0.0, out.accRealTot * (1.0 - out.accRealTot)) / nGenD);
 
@@ -2634,6 +2638,11 @@ void UnifiedDetectorGUI::DoCalculateMC() {
     DrawMCTab1(r);
     DrawMCTab2(r);
 
+    const double e1 = fEfficiency1->GetNumber();
+    const double e2 = fEfficiency2->GetNumber();
+    const double e3 = fEfficiency3->GetNumber();
+    const double eTot = (e1 * e2 * e3) / 10000.0;
+
     auto printReport = [&](std::ostream &os) {
         os << std::fixed
            << "\n========================================================================================\n"
@@ -2645,9 +2654,10 @@ void UnifiedDetectorGUI::DoCalculateMC() {
            << "    Bot : Z=" << r.z3_min << ".." << r.z3_max << " (" << r.x3 << "x" << r.y3 << " cm)\n"
            << "  Piano Ideale S (Lx x Ly)       : " << setprecision(1) << r.lxIdeal << " x " << r.lyIdeal
            << " cm  (S = " << setprecision(0) << r.areaIdeal << " cm^2, nu_piano = " << setprecision(2) << r.rateIdealHz << " Hz)\n"
-           << "  Flusso & Efficienza impostati  : I0 = " << setprecision(5) << fI0->GetNumber()
-           << " cm^-2 s^-1 sr^-1 | n = " << setprecision(2) << fExponent->GetNumber()
-           << " | eff_Top = " << setprecision(2) << fEfficiency->GetNumber() << " % (Mid e Bot = 100%)\n"
+           << "  Flusso & Efficienze impostate  : I0 = " << setprecision(5) << fI0->GetNumber()
+           << " cm^-2 s^-1 sr^-1 | n = " << setprecision(2) << fExponent->GetNumber() << "\n"
+           << "    eff_S1 (Top) = " << setprecision(2) << e1 << " % | eff_S2 (Mid) = " << e2
+           << " % | eff_S3 (Bot) = " << e3 << " %  =>  eff_tot (3F) = " << eTot << " %\n"
            << "----------------------------------------------------------------------------------------\n"
            << "  Gruppo Topologico   |  Conteggi   |  Accettanza A [%]     |  Rate MC [Hz]     \n"
            << "  --------------------------------------------------------------------------------------\n"
